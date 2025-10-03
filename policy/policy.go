@@ -1,0 +1,126 @@
+package amdpolicy
+
+import (
+	"fmt"
+
+	"github.com/prometheus/client_golang/prometheus"
+
+	cfgapi "github.com/containers/nri-plugins/pkg/apis/config/v1alpha1/resmgr/policy/template"
+	logger "github.com/containers/nri-plugins/pkg/log"
+	"github.com/containers/nri-plugins/pkg/resmgr/cache"
+	"github.com/containers/nri-plugins/pkg/resmgr/events"
+	policyapi "github.com/containers/nri-plugins/pkg/resmgr/policy"
+)
+
+const (
+	// PolicyName is the name used to activate this policy implementation.
+	PolicyName = "amd_chiplet"
+	// PolicyDescription is a short description of this policy.
+	PolicyDescription = "Map PODs to chiplets"
+)
+
+// policy is our runtime state for this policy.
+type policy struct {
+	cfg   *cfgapi.Config // our runtime configuration
+	cache cache.Cache    // pod/container cache
+}
+
+// Make sure policy implements the policy.Backend interface.
+var _ policyapi.Backend = &policy{}
+var log logger.Logger = logger.NewLogger("amdpolicy")
+
+// New creates a new uninitialized template policy instance.
+func New() policyapi.Backend {
+	return &policy{}
+}
+
+// Name returns the name of this policy.
+func (p *policy) Name() string {
+	return PolicyName
+}
+
+// Description returns the description for this policy.
+func (p *policy) Description() string {
+	return PolicyDescription
+}
+
+// Setup initializes the template policy instance.
+func (p *policy) Setup(opts *policyapi.BackendOptions) error {
+	cfg, ok := opts.Config.(*cfgapi.Config)
+	if !ok {
+		return fmt.Errorf("config data of wrong type %T", opts.Config)
+	}
+
+	p.cfg = cfg
+	p.cache = opts.Cache
+	return nil
+}
+
+// Start prepares this policy for accepting allocation/release requests.
+func (p *policy) Start() error {
+	log.Info("started...")
+	return nil
+}
+
+// Reconfigure this policy.
+func (p *policy) Reconfigure(newCfg interface{}) error {
+	cfg, ok := newCfg.(*cfgapi.Config)
+	if !ok {
+		return fmt.Errorf("config data of wrong type %T", newCfg)
+	}
+	p.cfg = cfg
+	return nil
+}
+
+// Sync synchronizes the state of this policy.
+func (p *policy) Sync(add []cache.Container, del []cache.Container) error {
+	log.Info("synchronizing state...")
+	return nil
+}
+
+// AllocateResources is a resource allocation request for this policy.
+func (p *policy) AllocateResources(container cache.Container) error {
+	log.Info("allocating resources for %s...", container.PrettyName())
+	return nil
+}
+
+// ReleaseResources is a resource release request for this policy.
+func (p *policy) ReleaseResources(container cache.Container) error {
+	log.Info("releasing resources of %s...", container.PrettyName())
+	return nil
+}
+
+// UpdateResources is a resource allocation update request for this policy.
+func (p *policy) UpdateResources(c cache.Container) error {
+	log.Info("(not) updating container %s...", c.PrettyName())
+	return nil
+}
+
+// HandleEvent handles policy-specific events.
+func (p *policy) HandleEvent(e *events.Policy) (bool, error) {
+	log.Info("received policy event %s.%s with data %v...", e.Source, e.Type, e.Data)
+	return true, nil
+}
+
+// GetMetrics returns the policy-specific metrics collector.
+func (p *policy) GetMetrics() policyapi.Metrics {
+	return &NoMetrics{}
+}
+
+// GetTopologyZones returns the policy/pool data for 'topology zone' CRDs.
+func (p *policy) GetTopologyZones() []*policyapi.TopologyZone {
+	return nil
+}
+
+// ExportResourceData provides resource data to export for the container.
+func (p *policy) ExportResourceData(c cache.Container) map[string]string {
+	return nil
+}
+
+type NoMetrics struct{}
+
+func (*NoMetrics) Describe(chan<- *prometheus.Desc) {
+}
+
+func (*NoMetrics) Collect(chan<- prometheus.Metric) {
+}
