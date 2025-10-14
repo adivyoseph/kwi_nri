@@ -7,6 +7,7 @@
 *.dll
 *.so
 *.dylib
+kwi_nri
 
 # Test binary, built with `go test -c`
 *.test

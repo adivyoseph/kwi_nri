@@ -1,0 +1,35 @@
+---
+kind: amdNriConfig
+version: 1.00.01
+description: config file for all AMD public cloud instances (VM's). Guest OS
+  topology mapping. NUMA and CCX.
+profiles:
+  azure6x:
+      #smt on or off for physical instance, used for cpu number processing
+      smt: on
+      #reservedCpus  map all kube-system name space containers to these cpus
+      reservedcpus: 0,1,64,65
+         
+      numas:
+        numa0: 
+          ccxs:
+            ccx0:
+              # cpus 0,32:1,33:...
+              cpus: 0-7,64-71
+              # or 0,1:2,3:...
+            ccx1: 
+              cpus: 8-15,72-79
+            ccx2:
+              cpus: 16-23,68-95
+            ccx3:
+              cpus: 24-31,68-95
+        numa1:
+          ccxs:
+            ccx0:
+              cpus: 32-39,96,103
+            ccx1:
+              cpus: 40-47,104-111
+            ccx2:
+              cpus: 48-55,112-119
+            ccx3:
+              cpus: 56-63,120-127
